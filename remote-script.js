@@ -46,6 +46,7 @@
 
                 // Provide feedback that the action was completed
                 button.textContent = 'Pointer Events Disabled';
+                button.style.backgroundColor = '#4CAF50';
                 button.disabled = true; // Disable the button after clicking
 
                 // Optional: Log to console for debugging
