@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.6
 // @description  Add a button to override pointer-events for checkboxes when "PO Line Items" header appears, reset button after each click, remove button if header is not present
-// @author       Radi
+// @author       Ummair Radi
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
