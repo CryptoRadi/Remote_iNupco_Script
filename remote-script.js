@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Override Pointer Events for Checkboxes with Button on Header Detection
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Add a button to override pointer-events for checkboxes when "PO Line Items" header appears
+// @version      1.2
+// @description  Add a button to override pointer-events for checkboxes when "PO Line Items" header appears, reset button after each click
 // @author       You
 // @match        *://*/*
 // @grant        none
@@ -11,13 +11,12 @@
 (function() {
     'use strict';
 
-    // Function to add the button once the header appears
-    function addButtonWhenHeaderAppears() {
-        const header = document.querySelector('h2.po-sec-header__text');
+    let button;
 
-        if (header && header.textContent.trim() === 'PO Line Items') {
-            // Create the button
-            const button = document.createElement('button');
+    // Function to create and append the button
+    function createButton() {
+        if (!button) {
+            button = document.createElement('button');
             button.textContent = 'Disable Pointer Events';
             button.style.position = 'fixed';
             button.style.top = '10px';
@@ -34,30 +33,54 @@
             // Append the button to the body
             document.body.appendChild(button);
 
-            // Add a click event listener to the button
+            // Add click event listener to the button
             button.addEventListener('click', () => {
                 // Select all checkboxes with the specific pointer-events style
                 const checkboxes = document.querySelectorAll('.check-dependancy .po-table tr:not(:first-child) td .check-input');
 
-                // Iterate through each checkbox and override the pointer-events style
-                checkboxes.forEach((checkbox) => {
-                    checkbox.style.pointerEvents = 'auto'; // Set pointer-events to auto to enable interaction
-                });
+                if (checkboxes.length > 0) {
+                    checkboxes.forEach((checkbox) => {
+                        checkbox.style.pointerEvents = 'auto'; // Set pointer-events to auto to enable interaction
+                    });
 
-                // Provide feedback that the action was completed
-                button.textContent = 'Pointer Events Disabled';
-                button.style.backgroundColor = '#4CAF50';
-                button.disabled = true; // Disable the button after clicking
+                    // Provide feedback that the action was completed
+                    button.textContent = 'Pointer Events Disabled';
+                    button.style.backgroundColor = '#4CAF50';
 
-                // Optional: Log to console for debugging
-                console.log('Pointer events overridden for checkboxes:', checkboxes);
+                    // Reset the button after 3 seconds
+                    setTimeout(() => {
+                        button.textContent = 'Disable Pointer Events';
+                        button.style.backgroundColor = '#ff4b4b';
+                        button.disabled = false;
+                    }, 3000);
+
+                    // Optional: Log to console for debugging
+                    console.log('Pointer events overridden for checkboxes:', checkboxes);
+                } else {
+                    console.error('No checkboxes found to override pointer events.');
+                }
             });
-        } else {
-            // Retry after a short delay if the header is not found yet
-            setTimeout(addButtonWhenHeaderAppears, 500);
         }
     }
 
-    // Start checking for the header to appear
-    addButtonWhenHeaderAppears();
+    // Function to observe for the header appearance
+    function observeHeader() {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) {
+                    const header = document.querySelector('h2.po-sec-header__text');
+                    if (header && header.textContent.trim() === 'PO Line Items') {
+                        createButton();
+                        observer.disconnect(); // Stop observing once the button is added
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Start observing the DOM for the header
+    observeHeader();
+
 })();
